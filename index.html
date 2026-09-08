@@ -28,7 +28,7 @@
 <div class="chat-card">
     <div class="header">
         <div class="avatar">👨‍🏫</div>
-        <h2>المساعد الافتراضي للفيزياء (Inkling AI)</h2>
+        <h2>المساعد الافتراضي للفيزياء</h2>
         <p>تحت إشراف: الأستاذ عمر حسان عبره</p>
     </div>
 
@@ -46,9 +46,10 @@
 </div>
 
 <script>
-    // المفتاح الجديد والنموذج المجاني Inkling
     const OPENROUTER_API_KEY = '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';
-    const MODEL_NAME = 'thinkingmachines/inkling:free';
+    
+    // استخدام نموذج مجاني ذو اعتمادية عالية ومستقر على OpenRouter
+    const MODEL_NAME = 'meta-llama/llama-3.2-1b-instruct:free';
 
     function speak(text) {
         if ('speechSynthesis' in window) {
@@ -73,16 +74,14 @@
     }
 
     async function fetchAIResponse(userPrompt) {
-        const systemPrompt = "أنت المعلم الافتراضي لمادة الفيزياء للثانوية العامة التابع للأستاذ عمر حسان عبره. اشرح المفاهيم بأسلوب علمي مبسط ومحفز للطلاب.";
+        const systemPrompt = "أنت المعلم الافتراضي لمادة الفيزياء للثانوية العامة التابع للأستاذ عمر حسان عبره. اشرح المفاهيم بأسلوب علمي مبسط ومحفز للطلاب باللغة العربية.";
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href || "http://localhost",
-                    "X-Title": "Physics Assistant"
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     "model": MODEL_NAME,
@@ -93,22 +92,22 @@
                 })
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errData = await response.json();
-                console.error("تفاصيل الخطأ من السيرفر:", errData);
-                throw new Error(`خطأ في الاتصال: ${response.status}`);
+                console.error("OpenRouter Error Details:", data);
+                return `خطأ من السيرفر (${response.status}): ${data.error ? data.error.message : 'يرجى التحقق من صلاحية المفتاح أو النموذج'}`;
             }
 
-            const data = await response.json();
-            if (data.choices && data.choices[0].message && data.choices[0].message.content) {
+            if (data.choices && data.choices[0] && data.choices[0].message) {
                 return data.choices[0].message.content;
             } else {
-                return "عذراً، لم يتم استلام استجابة من الذكاء الاصطناعي. أعد المحاولة.";
+                return "استلم السيرفر الطلب ولكن لم يرجع نصاً. أعد المحاولة.";
             }
 
         } catch (error) {
-            console.error("OpenRouter Error:", error);
-            return "حدث خطأ أثناء الاتصال بالمعلم الافتراضي. يرجى التأكد من تشغيل الصفحة عبر سيرفر محلي أو إيقاف مانع الإعلانات.";
+            console.error("Fetch Error:", error);
+            return "حدث خطأ في الشبكة أثناء الاتصال بالمعلم الافتراضي.";
         }
     }
 
